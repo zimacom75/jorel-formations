@@ -359,6 +359,13 @@
 
         <div class="form-grid full">
           <div class="form-group">
+            <label>Image de la slide (URL)</label>
+            <input type="text" id="lecon-image" placeholder="https://... (lien direct vers l'image)">
+          </div>
+        </div>
+
+        <div class="form-grid full">
+          <div class="form-group">
             <label>Contenu de la fiche de cours (texte)</label>
             <textarea id="lecon-texte" placeholder="Écris ici le contenu de la fiche : explications, points clés, exemples…"></textarea>
           </div>
@@ -740,6 +747,7 @@ function editLecon(l) {
   document.getElementById('lecon-ordre').value = l.ordre || '';
   document.getElementById('lecon-titre').value = l.titre || '';
   document.getElementById('lecon-youtube').value = l.youtube_url || '';
+  document.getElementById('lecon-image').value = l.image_url || '';
   document.getElementById('lecon-duree').value = l.duree_minutes || '';
   document.getElementById('lecon-texte').value = l.contenu_texte || '';
 
@@ -757,6 +765,7 @@ function resetForm() {
   document.getElementById('lecon-ordre').value = '';
   document.getElementById('lecon-titre').value = '';
   document.getElementById('lecon-youtube').value = '';
+  document.getElementById('lecon-image').value = '';
   document.getElementById('lecon-duree').value = '';
   document.getElementById('lecon-texte').value = '';
 
@@ -774,6 +783,7 @@ async function saveLecon() {
     ordre: parseInt(document.getElementById('lecon-ordre').value) || null,
     titre: document.getElementById('lecon-titre').value.trim(),
     youtube_url: document.getElementById('lecon-youtube').value.trim(),
+    image_url: document.getElementById('lecon-image').value.trim(),
     duree_minutes: parseInt(document.getElementById('lecon-duree').value) || null,
     contenu_texte: document.getElementById('lecon-texte').value
   };
@@ -1096,6 +1106,7 @@ async function bulkImport() {
       type: l.type || 'video',
       duree_minutes: l.duree_minutes || null,
       youtube_url: l.youtube_url || '',
+      image_url: l.image_url || '',
       contenu_texte: l.contenu_texte || ''
     }).select().single();
 
