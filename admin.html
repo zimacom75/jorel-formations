@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOR-EL — Espace Formateur</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const { createClient } = supabase;
+  const _supabase = createClient(
+    'https://uyovoajvjocemowrtyrs.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5b3ZvYWp2am9jZW1vd3J0eXJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExOTQ0NzYsImV4cCI6MjA5Njc3MDQ3Nn0.548_TIMsl7d99sf3evHBTI6xfPqacenJ_SmqCkwh5wk'
+  );
+  // ⚠️ Mets ton email ici — seul ce compte pourra accéder à cette page
+  const ADMIN_EMAIL = 'zimacom75@gmail.com';
+</script>
+<style>
+  :root {
+    --bg:      #091808;
+    --bg2:     #0b1c0c;
+    --accent:  #2ecc71;
+    --accent2: #27ae60;
+    --accent3: #1abc9c;
+    --glass:   rgba(255,255,255,0.035);
+    --border:  rgba(46,204,113,0.15);
+    --borderh: rgba(46,204,113,0.4);
+    --text:    #e8f5e9;
+    --muted:   rgba(232,245,233,0.5);
+    --error:   #ff6b6b;
+    --r: 14px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { min-height: 100%; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 230px; flex-shrink: 0; min-height: 100vh;
+    background: var(--bg2); border-right: 1px solid var(--border);
+    padding: 24px 0; position: sticky; top: 0;
+  }
+  .sb-logo { padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .sb-logo-text { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .sb-logo-sub { font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+  .sb-badge {
+    margin-top: 10px; display: inline-block; font-size: 0.68rem; font-weight: 700;
+    color: var(--accent); background: rgba(46,204,113,0.1); border-radius: 20px; padding: 3px 10px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; font-size: 0.86rem; color: var(--muted); cursor: pointer;
+    border-left: 2px solid transparent; transition: all .2s;
+  }
+  .nav-item:hover { background: var(--glass); color: var(--text); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(46,204,113,0.06); }
+
+  /* ── MAIN ── */
+  .main { flex: 1; padding: 32px 40px; max-width: 1100px; }
+  .page-title { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; margin-bottom: 6px; }
+  .page-sub { font-size: 0.88rem; color: var(--muted); margin-bottom: 28px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--glass); border: 1px solid var(--border);
+    backdrop-filter: blur(16px); border-radius: var(--r); padding: 24px; margin-bottom: 20px;
+  }
+  .card-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; }
+
+  /* ── FORMATIONS HEURES ── */
+  .formation-row {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 16px; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid rgba(46,204,113,0.06);
+  }
+  .formation-row:last-child { border-bottom: none; }
+  .fr-name { font-weight: 700; font-size: 0.92rem; }
+  .fr-name .icon { margin-right: 8px; }
+  .fr-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+
+  /* ── FORM ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+  .form-group label {
+    display: block; font-size: 0.78rem; font-weight: 600; color: rgba(232,245,233,0.7);
+    margin-bottom: 6px; letter-spacing: 0.3px;
+  }
+  input, select, textarea {
+    width: 100%; background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 11px 14px; color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.88rem;
+    outline: none; transition: border-color .2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+  select { cursor: pointer; }
+  select option { background: var(--bg2); }
+
+  .btn {
+    font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.88rem;
+    border: none; border-radius: 10px; padding: 11px 22px; cursor: pointer; transition: all .2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff;
+    box-shadow: 0 4px 16px rgba(46,204,113,0.3);
+  }
+  .btn-primary:hover { transform: translateY(-2px); }
+  .btn-ghost { background: var(--glass); border: 1px solid var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--borderh); }
+  .btn-danger { background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); color: var(--error); }
+  .btn-danger:hover { background: rgba(255,107,107,0.2); }
+  .btn-sm { padding: 6px 12px; font-size: 0.75rem; border-radius: 8px; }
+
+  /* ── TABLE LEÇONS ── */
+  .lecons-table { width: 100%; }
+  .lt-header {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+  }
+  .lt-row {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 12px;
+    padding: 14px 0; border-bottom: 1px solid rgba(46,204,113,0.06); align-items: center;
+    font-size: 0.85rem;
+  }
+  .lt-row:hover { background: rgba(46,204,113,0.03); }
+  .lt-title { font-weight: 600; }
+  .lt-module { font-size: 0.75rem; color: var(--muted); }
+  .type-badge {
+    font-size: 0.7rem; font-weight: 700; border-radius: 20px; padding: 3px 10px;
+    display: inline-block;
+  }
+  .type-badge.video { background: rgba(46,204,113,0.12); color: var(--accent); }
+  .type-badge.document { background: rgba(39,174,96,0.12); color: var(--accent2); }
+  .type-badge.examen_blanc { background: rgba(26,188,156,0.12); color: var(--accent3); }
+  .lt-actions { display: flex; gap: 6px; }
+
+  /* ── LIVES TABLE ── */
+  .lives-table { width: 100%; }
+  .live-row {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr auto; gap: 12px;
+    padding: 14px 0; border-bottom: 1px solid rgba(46,204,113,0.06); align-items: center;
+    font-size: 0.85rem;
+  }
+  .live-row:last-child { border-bottom: none; }
+  .live-day {
+    font-size: 0.7rem; font-weight: 700; color: var(--accent);
+    background: rgba(46,204,113,0.1); border-radius: 20px; padding: 3px 10px; display: inline-block;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: rgba(10,30,12,0.95); border: 1px solid var(--border);
+    backdrop-filter: blur(16px); border-radius: 12px; padding: 12px 20px;
+    font-size: 0.85rem; display: flex; align-items: center; gap: 8px;
+    transform: translateY(80px); transition: transform .3s; z-index: 999;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.show { transform: translateY(0); }
+  .toast.error { border-color: rgba(255,107,107,0.4); color: var(--error); }
+
+  /* ── ACCESS DENIED ── */
+  .access-denied {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; width: 100%; text-align: center; padding: 40px;
+  }
+  .access-denied .icon { font-size: 3rem; margin-bottom: 16px; }
+  .access-denied h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; margin-bottom: 8px; }
+  .access-denied p { color: var(--muted); margin-bottom: 24px; }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 0.88rem; }
+
+  /* ── APPRENANTS TABLE ── */
+  .ap-table-header {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+    font-size: 0.72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;
+  }
+  .ap-table-row {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 12px;
+    padding: 14px 0; border-bottom: 1px solid rgba(46,204,113,0.06); align-items: center;
+    font-size: 0.85rem;
+  }
+  .ap-table-row:hover { background: rgba(46,204,113,0.03); }
+  .ap-name { font-weight: 700; }
+  .ap-email { font-size: 0.72rem; color: var(--muted); }
+  .ap-hours-cell { display: flex; flex-direction: column; gap: 4px; }
+  .ap-hours-val { font-size: 0.78rem; font-weight: 600; }
+  .ap-hours-bar { height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; overflow: hidden; }
+  .ap-hours-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 2px; }
+  .ap-hours-fill.warn { background: linear-gradient(90deg, #f39c12, #e67e22); }
+  .ap-hours-empty { font-size: 0.78rem; color: var(--muted); }
+
+  /* ── DETAIL ── */
+  .detail-formation-row {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 16px; align-items: center;
+    padding: 14px 0; border-bottom: 1px solid rgba(46,204,113,0.06);
+  }
+  .detail-formation-row:last-child { border-bottom: none; }
+  .df-name { font-weight: 700; font-size: 0.9rem; }
+  .df-label { font-size: 0.72rem; color: var(--muted); margin-bottom: 4px; }
+  .df-bar { height: 6px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+  .df-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent3)); border-radius: 3px; }
+
+  .examen-row {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid rgba(46,204,113,0.06); font-size: 0.85rem;
+  }
+  .examen-row:last-child { border-bottom: none; }
+  .examen-score { font-weight: 800; font-family: 'Syne', sans-serif; }
+  .examen-score.good { color: var(--accent); }
+  .examen-score.bad { color: var(--error); }
+
+  .live-presence-row {
+    display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid rgba(46,204,113,0.06); font-size: 0.85rem;
+  }
+  .live-presence-row:last-child { border-bottom: none; }
+  .presence-toggle {
+    display: flex; gap: 6px;
+  }
+  .presence-btn {
+    font-size: 0.75rem; font-weight: 700; border-radius: 20px; padding: 5px 12px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--glass); color: var(--muted); transition: all .2s;
+  }
+  .presence-btn.active.present { background: rgba(46,204,113,0.15); border-color: var(--accent); color: var(--accent); }
+  .presence-btn.active.absent { background: rgba(255,107,107,0.1); border-color: var(--error); color: var(--error); }
+  .presence-btn:hover { border-color: var(--borderh); }
+
+  @media (max-width: 800px) {
+    .ap-table-header, .ap-table-row { grid-template-columns: 1fr; gap: 4px; }
+    .detail-formation-row, .examen-row, .live-presence-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+
+  @media (max-width: 800px) {
+    .sidebar { display: none; }
+    .main { padding: 20px 16px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .lt-header, .lt-row { grid-template-columns: 1fr; gap: 4px; }
+    .live-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ACCESS DENIED (affiché si pas admin) -->
+<div class="access-denied" id="access-denied" style="display:none;">
+  <div class="icon">🔒</div>
+  <h2>Accès réservé</h2>
+  <p>Cette page est réservée à l'équipe JOR-EL Formations.</p>
+  <a href="dashboard-apprenant.html" class="btn btn-primary" style="text-decoration:none;">Retour au tableau de bord</a>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none; width:100%; display:flex;">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-text">JOR-EL</div>
+      <div class="sb-logo-sub">Formations</div>
+      <div class="sb-badge">👨‍🏫 Espace Formateur</div>
+    </div>
+    <div class="nav-item active" onclick="switchPanel('leçons', this)">📚 Leçons & contenu</div>
+    <div class="nav-item" onclick="switchPanel('heures', this)">⏱ Heures requises</div>
+    <div class="nav-item" onclick="switchPanel('lives', this)">🔴 Sessions Live</div>
+    <div class="nav-item" onclick="switchPanel('questions', this)">❓ Questions d'examen</div>
+    <div class="nav-item" onclick="switchPanel('import', this)">📥 Import en masse</div>
+    <div class="nav-item" onclick="switchPanel('messages', this)">✉️ Messages</div>
+    <div class="nav-item" onclick="switchPanel('apprenants', this)">👥 Apprenants</div>
+    <div style="height:1px;background:var(--border);margin:16px 20px;"></div>
+    <a class="nav-item" href="dashboard-apprenant.html">← Vue apprenant</a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ══ PANEL LEÇONS ══ -->
+    <div class="panel active" id="panel-leçons">
+      <div class="page-title">Leçons & contenu</div>
+      <div class="page-sub">Ajoute, modifie ou supprime les leçons de chaque formation.</div>
+
+      <!-- FORM AJOUT/EDIT -->
+      <div class="card">
+        <div class="card-title">
+          <span id="form-title">➕ Nouvelle leçon</span>
+          <button class="btn btn-ghost btn-sm" onclick="resetForm()" id="btn-cancel-edit" style="display:none;">Annuler</button>
+        </div>
+
+        <input type="hidden" id="lecon-id">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Formation</label>
+            <select id="lecon-formation">
+              <option value="">Sélectionner…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Type de contenu</label>
+            <select id="lecon-type">
+              <option value="video">🎥 Vidéo</option>
+              <option value="document">📄 Document / Fiche</option>
+              <option value="examen_blanc">📝 Examen blanc</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Nom du module (ex: Module 1 — Réglementation)</label>
+            <input type="text" id="lecon-module" placeholder="Module 1 — Réglementation">
+          </div>
+          <div class="form-group">
+            <label>Ordre dans le module</label>
+            <input type="number" id="lecon-ordre" placeholder="1" min="1">
+          </div>
+        </div>
+
+        <div class="form-grid full">
+          <div class="form-group">
+            <label>Titre de la leçon</label>
+            <input type="text" id="lecon-titre" placeholder="Ex: Introduction au transport de marchandises">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Lien YouTube (non répertorié)</label>
+            <input type="text" id="lecon-youtube" placeholder="https://youtu.be/XXXXXXXX">
+          </div>
+          <div class="form-group">
+            <label>Durée (en minutes)</label>
+            <input type="number" id="lecon-duree" placeholder="18" min="1">
+          </div>
+        </div>
+
+        <div class="form-grid full">
+          <div class="form-group">
+            <label>Contenu de la fiche de cours (texte)</label>
+            <textarea id="lecon-texte" placeholder="Écris ici le contenu de la fiche : explications, points clés, exemples…"></textarea>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveLecon()" id="btn-save">💾 Enregistrer la leçon</button>
+      </div>
+
+      <!-- LISTE -->
+      <div class="card">
+        <div class="card-title">
+          <span>📋 Toutes les leçons</span>
+          <select id="filter-formation" onchange="loadLecons()" style="width:auto;padding:6px 12px;font-size:0.78rem;">
+            <option value="">Toutes les formations</option>
+          </select>
+        </div>
+        <div class="lecons-table">
+          <div class="lt-header">
+            <span>Titre</span>
+            <span>Module</span>
+            <span>Type</span>
+            <span>Durée</span>
+            <span>Ordre</span>
+            <span></span>
+          </div>
+          <div id="lecons-list">
+            <div class="empty-state">Chargement…</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL HEURES ══ -->
+    <div class="panel" id="panel-heures">
+      <div class="page-title">Heures requises par formation</div>
+      <div class="page-sub">Définis le nombre d'heures en ligne et en présentiel obligatoires pour chaque formation.</div>
+
+      <div class="card">
+        <div class="card-title">⏱ Configuration des heures</div>
+        <div id="formations-heures-list">
+          <div class="empty-state">Chargement…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL LIVES ══ -->
+    <div class="panel" id="panel-lives">
+      <div class="page-title">Sessions Live</div>
+      <div class="page-sub">Planifie les sessions présentielles en ligne (lundi/mardi).</div>
+
+      <div class="card">
+        <div class="card-title">➕ Nouvelle session</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Formation</label>
+            <select id="live-formation"><option value="">Sélectionner…</option></select>
+          </div>
+          <div class="form-group">
+            <label>Titre de la session</label>
+            <input type="text" id="live-titre" placeholder="Ex: Live — Révisions droit social">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Date et heure</label>
+            <input type="datetime-local" id="live-date">
+          </div>
+          <div class="form-group">
+            <label>Durée (minutes)</label>
+            <input type="number" id="live-duree" value="60" min="15">
+          </div>
+        </div>
+        <div class="form-grid full">
+          <div class="form-group">
+            <label>Lien visio (Zoom, Google Meet…)</label>
+            <input type="text" id="live-lien" placeholder="https://meet.google.com/xxx-xxxx-xxx">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveLive()">💾 Planifier la session</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📅 Sessions à venir</div>
+        <div id="lives-list">
+          <div class="empty-state">Chargement…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL QUESTIONS D'EXAMEN ══ -->
+    <div class="panel" id="panel-questions">
+      <div class="page-title">Questions d'examen blanc</div>
+      <div class="page-sub">Crée les questions pour les examens blancs par module ou pour l'examen final de chaque formation.</div>
+
+      <div class="card">
+        <div class="card-title">
+          <span id="q-form-title">➕ Nouvelle question</span>
+          <button class="btn btn-ghost btn-sm" onclick="resetQuestionForm()" id="btn-cancel-q-edit" style="display:none;">Annuler</button>
+        </div>
+
+        <input type="hidden" id="q-id">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Formation</label>
+            <select id="q-formation" onchange="loadExamenTargets()">
+              <option value="">Sélectionner…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Examen concerné</label>
+            <select id="q-target">
+              <option value="">Choisis d'abord une formation</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid full">
+          <div class="form-group">
+            <label>Question</label>
+            <textarea id="q-question" placeholder="Écris la question ici…" style="min-height:70px;"></textarea>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Option A</label>
+            <input type="text" id="q-opt-a" placeholder="Réponse A">
+          </div>
+          <div class="form-group">
+            <label>Option B</label>
+            <input type="text" id="q-opt-b" placeholder="Réponse B">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Option C</label>
+            <input type="text" id="q-opt-c" placeholder="Réponse C">
+          </div>
+          <div class="form-group">
+            <label>Option D</label>
+            <input type="text" id="q-opt-d" placeholder="Réponse D">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Bonne réponse</label>
+            <select id="q-correct">
+              <option value="0">A</option>
+              <option value="1">B</option>
+              <option value="2">C</option>
+              <option value="3">D</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Ordre d'affichage</label>
+            <input type="number" id="q-ordre" placeholder="1" min="1">
+          </div>
+        </div>
+
+        <div class="form-grid full">
+          <div class="form-group">
+            <label>Explication (affichée après la réponse)</label>
+            <textarea id="q-explication" placeholder="Pourquoi c'est la bonne réponse…" style="min-height:70px;"></textarea>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" onclick="saveQuestion()" id="btn-save-q">💾 Enregistrer la question</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>📋 Questions enregistrées</span>
+          <span id="questions-count" style="font-size:0.78rem;color:var(--muted);"></span>
+        </div>
+        <div id="questions-list">
+          <div class="empty-state">Choisis une formation et un examen pour voir les questions.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL IMPORT EN MASSE ══ -->
+    <div class="panel" id="panel-import">
+      <div class="page-title">Import en masse</div>
+      <div class="page-sub">Colle un bloc JSON (généré dans une autre conversation) pour créer plusieurs leçons et leurs questions d'examen d'un coup.</div>
+
+      <div class="card">
+        <div class="card-title">📥 Coller le JSON</div>
+        <div class="form-grid full">
+          <div class="form-group">
+            <textarea id="import-json" placeholder='{"formation_slug":"transport","lecons":[{"module_nom":"Module 1","ordre":1,"titre":"...","type":"video","duree_minutes":18,"youtube_url":"","contenu_texte":"...","questions":[]}]}' style="min-height:240px; font-family:monospace; font-size:0.8rem;"></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="bulkImport()">📥 Importer le contenu</button>
+        <div id="import-result" style="margin-top:14px;"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">ℹ️ Format attendu</div>
+        <div style="font-size:0.82rem;color:var(--muted);line-height:1.7;">
+          <p style="margin-bottom:10px;"><strong>formation_slug</strong> : transport, vtc ou hygiene</p>
+          <p style="margin-bottom:10px;"><strong>lecons[]</strong> : module_nom, ordre, titre, type (video/document/examen_blanc), duree_minutes, youtube_url, contenu_texte</p>
+          <p><strong>questions[]</strong> (uniquement si type = examen_blanc) : question, option_a à option_d, bonne_reponse (0-3), explication, ordre</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL MESSAGES ══ -->
+    <div class="panel" id="panel-messages">
+      <div class="page-title">Messages reçus</div>
+      <div class="page-sub">Messages envoyés via le formulaire de contact de la landing page.</div>
+      <div class="card">
+        <div class="card-title">
+          <span>✉️ Boîte de réception</span>
+          <span id="messages-count" style="font-size:0.78rem;color:var(--muted);"></span>
+        </div>
+        <div id="messages-list">
+          <div class="empty-state">Chargement…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PANEL APPRENANTS ══ -->
+    <div class="panel" id="panel-apprenants">
+
+      <!-- VUE GLOBALE -->
+      <div id="apprenants-vue-globale">
+        <div class="page-title">Apprenants</div>
+        <div class="page-sub">Suivi des heures de formation et de la progression de chaque apprenant.</div>
+
+        <div class="card">
+          <div class="card-title">
+            <span>👥 Tous les apprenants</span>
+            <span id="apprenants-count" style="font-size:0.78rem;color:var(--muted);"></span>
+          </div>
+          <div id="apprenants-table">
+            <div class="empty-state">Chargement…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VUE DÉTAIL -->
+      <div id="apprenants-vue-detail" style="display:none;">
+        <button class="btn btn-ghost btn-sm" onclick="backToApprenants()" style="margin-bottom:16px;">← Retour à la liste</button>
+
+        <div class="page-title" id="detail-name">Apprenant</div>
+        <div class="page-sub" id="detail-email">—</div>
+
+        <div class="card">
+          <div class="card-title">⏱ Heures par formation</div>
+          <div id="detail-heures">
+            <div class="empty-state">Chargement…</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📝 Examens blancs passés</div>
+          <div id="detail-examens">
+            <div class="empty-state">Aucun examen passé.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🔴 Présences aux sessions Live</div>
+          <div id="detail-lives">
+            <div class="empty-state">Aucune session disponible.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toast-icon">✓</span><span id="toast-msg">Message</span>
+</div>
+
+<script>
+let FORMATIONS = [];
+
+// ── AUTH CHECK ──
+async function init() {
+  const { data: { user } } = await _supabase.auth.getUser();
+  if (!user) { window.location.href = 'jorel-auth.html'; return; }
+
+  if (user.email !== ADMIN_EMAIL) {
+    document.getElementById('access-denied').style.display = 'flex';
+    return;
+  }
+
+  document.getElementById('app').style.display = 'flex';
+  await loadFormations();
+  loadLecons();
+  loadLives();
+  loadHeuresConfig();
+  loadApprenants();
+  loadMessages();
+}
+
+// ── NAV ──
+function switchPanel(name, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+// ── LOAD FORMATIONS (pour les selects) ──
+async function loadFormations() {
+  const { data, error } = await _supabase.from('formations').select('*').order('titre');
+  if (error) { showToast(error.message, true); return; }
+  FORMATIONS = data || [];
+
+  const selects = ['lecon-formation', 'filter-formation', 'live-formation', 'q-formation'];
+  selects.forEach(id => {
+    const sel = document.getElementById(id);
+    const keepFirst = sel.querySelector('option');
+    sel.innerHTML = '';
+    sel.appendChild(keepFirst);
+    FORMATIONS.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.titre;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+// ══════════════ LEÇONS ══════════════
+
+async function loadLecons() {
+  const formationFilter = document.getElementById('filter-formation').value;
+  let query = _supabase.from('lecons').select('*').order('ordre', { ascending: true });
+  if (formationFilter) query = query.eq('formation_id', formationFilter);
+
+  const { data, error } = await query;
+  const list = document.getElementById('lecons-list');
+
+  if (error) { list.innerHTML = `<div class="empty-state">Erreur : ${error.message}</div>`; return; }
+  if (!data || data.length === 0) { list.innerHTML = `<div class="empty-state">Aucune leçon pour l'instant. Ajoute la première ci-dessus 👆</div>`; return; }
+
+  const typeLabels = { video: '🎥 Vidéo', document: '📄 Document', examen_blanc: '📝 Examen' };
+
+  list.innerHTML = data.map(l => `
+    <div class="lt-row">
+      <div>
+        <div class="lt-title">${escapeHtml(l.titre)}</div>
+      </div>
+      <div class="lt-module">${escapeHtml(l.module_nom || '—')}</div>
+      <div><span class="type-badge ${l.type}">${typeLabels[l.type] || l.type}</span></div>
+      <div>${l.duree_minutes || '—'} min</div>
+      <div>#${l.ordre || '—'}</div>
+      <div class="lt-actions">
+        <button class="btn btn-ghost btn-sm" onclick='editLecon(${JSON.stringify(l).replace(/'/g, "&apos;")})'>✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteLecon('${l.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function editLecon(l) {
+  document.getElementById('lecon-id').value = l.id;
+  document.getElementById('lecon-formation').value = l.formation_id || '';
+  document.getElementById('lecon-type').value = l.type || 'video';
+  document.getElementById('lecon-module').value = l.module_nom || '';
+  document.getElementById('lecon-ordre').value = l.ordre || '';
+  document.getElementById('lecon-titre').value = l.titre || '';
+  document.getElementById('lecon-youtube').value = l.youtube_url || '';
+  document.getElementById('lecon-duree').value = l.duree_minutes || '';
+  document.getElementById('lecon-texte').value = l.contenu_texte || '';
+
+  document.getElementById('form-title').textContent = '✏️ Modifier la leçon';
+  document.getElementById('btn-cancel-edit').style.display = 'inline-block';
+  document.getElementById('btn-save').textContent = '💾 Mettre à jour';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetForm() {
+  document.getElementById('lecon-id').value = '';
+  document.getElementById('lecon-formation').value = '';
+  document.getElementById('lecon-type').value = 'video';
+  document.getElementById('lecon-module').value = '';
+  document.getElementById('lecon-ordre').value = '';
+  document.getElementById('lecon-titre').value = '';
+  document.getElementById('lecon-youtube').value = '';
+  document.getElementById('lecon-duree').value = '';
+  document.getElementById('lecon-texte').value = '';
+
+  document.getElementById('form-title').textContent = '➕ Nouvelle leçon';
+  document.getElementById('btn-cancel-edit').style.display = 'none';
+  document.getElementById('btn-save').textContent = '💾 Enregistrer la leçon';
+}
+
+async function saveLecon() {
+  const id = document.getElementById('lecon-id').value;
+  const payload = {
+    formation_id: document.getElementById('lecon-formation').value || null,
+    type: document.getElementById('lecon-type').value,
+    module_nom: document.getElementById('lecon-module').value.trim(),
+    ordre: parseInt(document.getElementById('lecon-ordre').value) || null,
+    titre: document.getElementById('lecon-titre').value.trim(),
+    youtube_url: document.getElementById('lecon-youtube').value.trim(),
+    duree_minutes: parseInt(document.getElementById('lecon-duree').value) || null,
+    contenu_texte: document.getElementById('lecon-texte').value
+  };
+
+  if (!payload.formation_id) { showToast('Choisis une formation', true); return; }
+  if (!payload.titre) { showToast('Le titre est requis', true); return; }
+
+  let error;
+  if (id) {
+    ({ error } = await _supabase.from('lecons').update(payload).eq('id', id));
+  } else {
+    ({ error } = await _supabase.from('lecons').insert(payload));
+  }
+
+  if (error) { showToast(error.message, true); return; }
+  showToast(id ? 'Leçon mise à jour ✓' : 'Leçon ajoutée ✓');
+  resetForm();
+  loadLecons();
+}
+
+async function deleteLecon(id) {
+  if (!confirm('Supprimer définitivement cette leçon ?')) return;
+  const { error } = await _supabase.from('lecons').delete().eq('id', id);
+  if (error) { showToast(error.message, true); return; }
+  showToast('Leçon supprimée');
+  loadLecons();
+}
+
+// ══════════════ HEURES REQUISES ══════════════
+
+async function loadHeuresConfig() {
+  const list = document.getElementById('formations-heures-list');
+  if (!FORMATIONS.length) { list.innerHTML = `<div class="empty-state">Aucune formation trouvée.</div>`; return; }
+
+  const icons = { transport: '🚚', vtc: '🚗', hygiene: '🍽️' };
+
+  list.innerHTML = FORMATIONS.map(f => `
+    <div class="formation-row">
+      <div class="fr-name"><span class="icon">${icons[f.slug] || '📚'}</span>${escapeHtml(f.titre)}</div>
+      <div>
+        <div class="fr-label">Heures en ligne requises</div>
+        <input type="number" min="0" value="${f.heures_requises_ligne ?? 105}" id="heures-ligne-${f.id}">
+      </div>
+      <div>
+        <div class="fr-label">Heures présentiel requises</div>
+        <input type="number" min="0" value="${f.heures_requises_presentiel ?? 15}" id="heures-presentiel-${f.id}">
+      </div>
+      <div>
+        <button class="btn btn-primary btn-sm" onclick="saveHeures('${f.id}')">💾 Sauver</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function saveHeures(formationId) {
+  const ligne = parseInt(document.getElementById(`heures-ligne-${formationId}`).value) || 0;
+  const presentiel = parseInt(document.getElementById(`heures-presentiel-${formationId}`).value) || 0;
+
+  const { error } = await _supabase.from('formations').update({
+    heures_requises_ligne: ligne,
+    heures_requises_presentiel: presentiel
+  }).eq('id', formationId);
+
+  if (error) { showToast(error.message, true); return; }
+  showToast('Heures mises à jour ✓');
+}
+
+// ══════════════ SESSIONS LIVE ══════════════
+
+async function saveLive() {
+  const formationId = document.getElementById('live-formation').value;
+  const titre = document.getElementById('live-titre').value.trim();
+  const date = document.getElementById('live-date').value;
+  const duree = parseInt(document.getElementById('live-duree').value) || 60;
+  const lien = document.getElementById('live-lien').value.trim();
+
+  if (!formationId || !titre || !date) { showToast('Remplis tous les champs requis', true); return; }
+
+  const { error } = await _supabase.from('sessions_live').insert({
+    formation_id: formationId,
+    titre,
+    date_heure: new Date(date).toISOString(),
+    duree_minutes: duree,
+    lien_visio: lien
+  });
+
+  if (error) { showToast(error.message, true); return; }
+  showToast('Session planifiée ✓');
+
+  document.getElementById('live-titre').value = '';
+  document.getElementById('live-date').value = '';
+  document.getElementById('live-lien').value = '';
+  loadLives();
+}
+
+async function loadLives() {
+  const { data, error } = await _supabase
+    .from('sessions_live')
+    .select('*, formations(titre)')
+    .order('date_heure', { ascending: true });
+
+  const list = document.getElementById('lives-list');
+  if (error) { list.innerHTML = `<div class="empty-state">Erreur : ${error.message}</div>`; return; }
+  if (!data || data.length === 0) { list.innerHTML = `<div class="empty-state">Aucune session planifiée.</div>`; return; }
+
+  const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+
+  list.innerHTML = data.map(s => {
+    const d = new Date(s.date_heure);
+    const dayLabel = days[d.getDay()];
+    const dateStr = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    const timeStr = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="live-row">
+        <div>
+          <div style="font-weight:600;">${escapeHtml(s.titre)}</div>
+          <div style="font-size:0.75rem;color:var(--muted);">${escapeHtml(s.formations?.titre || '—')}</div>
+        </div>
+        <div><span class="live-day">${dayLabel} ${dateStr}</span></div>
+        <div>${timeStr} · ${s.duree_minutes} min</div>
+        <div style="font-size:0.78rem;color:var(--accent);overflow:hidden;text-overflow:ellipsis;">${escapeHtml(s.lien_visio || '—')}</div>
+        <div><button class="btn btn-danger btn-sm" onclick="deleteLive('${s.id}')">🗑️</button></div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function deleteLive(id) {
+  if (!confirm('Supprimer cette session ?')) return;
+  const { error } = await _supabase.from('sessions_live').delete().eq('id', id);
+  if (error) { showToast(error.message, true); return; }
+  showToast('Session supprimée');
+  loadLives();
+}
+
+// ══════════════ QUESTIONS D'EXAMEN ══════════════
+
+async function loadExamenTargets() {
+  const formationId = document.getElementById('q-formation').value;
+  const targetSel = document.getElementById('q-target');
+  targetSel.innerHTML = '<option value="">Sélectionner…</option>';
+
+  if (!formationId) {
+    targetSel.innerHTML = '<option value="">Choisis d\'abord une formation</option>';
+    document.getElementById('questions-list').innerHTML = '<div class="empty-state">Choisis une formation et un examen pour voir les questions.</div>';
+    return;
+  }
+
+  // Option : examen final de la formation
+  const optFinal = document.createElement('option');
+  optFinal.value = 'final';
+  optFinal.textContent = '🏁 Examen final de la formation';
+  targetSel.appendChild(optFinal);
+
+  // Options : leçons de type examen_blanc dans cette formation
+  const { data: lecons } = await _supabase
+    .from('lecons')
+    .select('*')
+    .eq('formation_id', formationId)
+    .eq('type', 'examen_blanc')
+    .order('ordre', { ascending: true });
+
+  (lecons || []).forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.id;
+    opt.textContent = `📝 ${l.module_nom ? l.module_nom + ' — ' : ''}${l.titre}`;
+    targetSel.appendChild(opt);
+  });
+
+  targetSel.onchange = loadQuestions;
+  loadQuestions();
+}
+
+async function loadQuestions() {
+  const formationId = document.getElementById('q-formation').value;
+  const target = document.getElementById('q-target').value;
+  const list = document.getElementById('questions-list');
+  const countEl = document.getElementById('questions-count');
+
+  if (!formationId || !target) {
+    list.innerHTML = '<div class="empty-state">Choisis une formation et un examen pour voir les questions.</div>';
+    countEl.textContent = '';
+    return;
+  }
+
+  let query = _supabase.from('questions_examen').select('*').eq('formation_id', formationId).order('ordre', { ascending: true });
+  if (target === 'final') query = query.is('lecon_id', null);
+  else query = query.eq('lecon_id', target);
+
+  const { data, error } = await query;
+  if (error) { list.innerHTML = `<div class="empty-state">Erreur : ${error.message}</div>`; return; }
+
+  countEl.textContent = `${(data || []).length} question${(data || []).length > 1 ? 's' : ''}`;
+
+  if (!data || data.length === 0) {
+    list.innerHTML = '<div class="empty-state">Aucune question pour cet examen. Ajoute la première ci-dessus 👆</div>';
+    return;
+  }
+
+  const letters = ['A','B','C','D'];
+  list.innerHTML = data.map(q => `
+    <div class="lt-row" style="grid-template-columns: 2fr 1fr auto;">
+      <div>
+        <div class="lt-title">${escapeHtml(q.question)}</div>
+        <div class="lt-module">Bonne réponse : ${letters[q.bonne_reponse]} — ${escapeHtml(q['option_' + letters[q.bonne_reponse].toLowerCase()] || '')}</div>
+      </div>
+      <div>#${q.ordre || '—'}</div>
+      <div class="lt-actions">
+        <button class="btn btn-ghost btn-sm" onclick='editQuestion(${JSON.stringify(q).replace(/'/g, "&apos;")})'>✏️</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteQuestion('${q.id}')">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function editQuestion(q) {
+  document.getElementById('q-id').value = q.id;
+  document.getElementById('q-question').value = q.question || '';
+  document.getElementById('q-opt-a').value = q.option_a || '';
+  document.getElementById('q-opt-b').value = q.option_b || '';
+  document.getElementById('q-opt-c').value = q.option_c || '';
+  document.getElementById('q-opt-d').value = q.option_d || '';
+  document.getElementById('q-correct').value = q.bonne_reponse ?? 0;
+  document.getElementById('q-ordre').value = q.ordre || '';
+  document.getElementById('q-explication').value = q.explication || '';
+
+  document.getElementById('q-form-title').textContent = '✏️ Modifier la question';
+  document.getElementById('btn-cancel-q-edit').style.display = 'inline-block';
+  document.getElementById('btn-save-q').textContent = '💾 Mettre à jour';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetQuestionForm() {
+  document.getElementById('q-id').value = '';
+  document.getElementById('q-question').value = '';
+  document.getElementById('q-opt-a').value = '';
+  document.getElementById('q-opt-b').value = '';
+  document.getElementById('q-opt-c').value = '';
+  document.getElementById('q-opt-d').value = '';
+  document.getElementById('q-correct').value = '0';
+  document.getElementById('q-ordre').value = '';
+  document.getElementById('q-explication').value = '';
+
+  document.getElementById('q-form-title').textContent = '➕ Nouvelle question';
+  document.getElementById('btn-cancel-q-edit').style.display = 'none';
+  document.getElementById('btn-save-q').textContent = '💾 Enregistrer la question';
+}
+
+async function saveQuestion() {
+  const id = document.getElementById('q-id').value;
+  const formationId = document.getElementById('q-formation').value;
+  const target = document.getElementById('q-target').value;
+
+  if (!formationId) { showToast('Choisis une formation', true); return; }
+  if (!target) { showToast('Choisis un examen (final ou par module)', true); return; }
+
+  const question = document.getElementById('q-question').value.trim();
+  if (!question) { showToast('La question est requise', true); return; }
+
+  const payload = {
+    formation_id: formationId,
+    lecon_id: target === 'final' ? null : target,
+    question,
+    option_a: document.getElementById('q-opt-a').value.trim(),
+    option_b: document.getElementById('q-opt-b').value.trim(),
+    option_c: document.getElementById('q-opt-c').value.trim(),
+    option_d: document.getElementById('q-opt-d').value.trim(),
+    bonne_reponse: parseInt(document.getElementById('q-correct').value),
+    ordre: parseInt(document.getElementById('q-ordre').value) || null,
+    explication: document.getElementById('q-explication').value.trim()
+  };
+
+  let error;
+  if (id) ({ error } = await _supabase.from('questions_examen').update(payload).eq('id', id));
+  else ({ error } = await _supabase.from('questions_examen').insert(payload));
+
+  if (error) { showToast(error.message, true); return; }
+  showToast(id ? 'Question mise à jour ✓' : 'Question ajoutée ✓');
+  resetQuestionForm();
+  loadQuestions();
+}
+
+async function deleteQuestion(id) {
+  if (!confirm('Supprimer cette question ?')) return;
+  const { error } = await _supabase.from('questions_examen').delete().eq('id', id);
+  if (error) { showToast(error.message, true); return; }
+  showToast('Question supprimée');
+  loadQuestions();
+}
+
+// ══════════════ IMPORT EN MASSE ══════════════
+
+async function bulkImport() {
+  const raw = document.getElementById('import-json').value.trim();
+  const resultEl = document.getElementById('import-result');
+  resultEl.innerHTML = '';
+
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (e) {
+    resultEl.innerHTML = `<div class="empty-state" style="color:var(--error);">❌ JSON invalide : ${e.message}</div>`;
+    return;
+  }
+
+  const formation = FORMATIONS.find(f => f.slug === data.formation_slug);
+  if (!formation) {
+    resultEl.innerHTML = `<div class="empty-state" style="color:var(--error);">❌ Formation "${data.formation_slug}" introuvable.</div>`;
+    return;
+  }
+
+  let leconsCreated = 0, questionsCreated = 0, errors = [];
+
+  for (const l of (data.lecons || [])) {
+    const { data: inserted, error } = await _supabase.from('lecons').insert({
+      formation_id: formation.id,
+      module_nom: l.module_nom || '',
+      ordre: l.ordre || null,
+      titre: l.titre || 'Sans titre',
+      type: l.type || 'video',
+      duree_minutes: l.duree_minutes || null,
+      youtube_url: l.youtube_url || '',
+      contenu_texte: l.contenu_texte || ''
+    }).select().single();
+
+    if (error) { errors.push(`Leçon "${l.titre}": ${error.message}`); continue; }
+    leconsCreated++;
+
+    if (l.type === 'examen_blanc' && Array.isArray(l.questions)) {
+      for (const q of l.questions) {
+        const { error: qErr } = await _supabase.from('questions_examen').insert({
+          formation_id: formation.id,
+          lecon_id: inserted.id,
+          question: q.question,
+          option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d,
+          bonne_reponse: q.bonne_reponse,
+          explication: q.explication || '',
+          ordre: q.ordre || null
+        });
+        if (qErr) errors.push(`Question "${q.question?.slice(0,40)}…": ${qErr.message}`);
+        else questionsCreated++;
+      }
+    }
+  }
+
+  // Questions d'examen final (au niveau racine, pas liées à une leçon)
+  if (Array.isArray(data.questions_final)) {
+    for (const q of data.questions_final) {
+      const { error: qErr } = await _supabase.from('questions_examen').insert({
+        formation_id: formation.id,
+        lecon_id: null,
+        question: q.question,
+        option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d,
+        bonne_reponse: q.bonne_reponse,
+        explication: q.explication || '',
+        ordre: q.ordre || null
+      });
+      if (qErr) errors.push(`Question finale "${q.question?.slice(0,40)}…": ${qErr.message}`);
+      else questionsCreated++;
+    }
+  }
+
+  let html = `<div style="font-size:0.88rem;">✅ <strong>${leconsCreated}</strong> leçon(s) créée(s), <strong>${questionsCreated}</strong> question(s) créée(s).</div>`;
+  if (errors.length) html += `<div style="margin-top:8px;font-size:0.8rem;color:var(--error);">${errors.map(e => '⚠️ ' + escapeHtml(e)).join('<br>')}</div>`;
+  resultEl.innerHTML = html;
+
+  showToast(`Import terminé : ${leconsCreated} leçon(s)`);
+  loadLecons();
+}
+
+// ══════════════ APPRENANTS ══════════════
+
+let GLOBAL_LECONS = [];
+let GLOBAL_PROFILS = [];
+let GLOBAL_TEMPS = [];
+let GLOBAL_PROGRESSION = [];
+let GLOBAL_EXAMENS = [];
+let GLOBAL_LIVES = [];
+let GLOBAL_PRESENCES = [];
+
+async function loadApprenants() {
+  const [profilsRes, leconsRes, tempsRes, progRes, examRes, livesRes, presRes] = await Promise.all([
+    _supabase.from('profils').select('*'),
+    _supabase.from('lecons').select('*'),
+    _supabase.from('temps_passe').select('*'),
+    _supabase.from('progression').select('*'),
+    _supabase.from('examens_blancs').select('*').order('created_at', { ascending: false }),
+    _supabase.from('sessions_live').select('*').order('date_heure', { ascending: false }),
+    _supabase.from('presences_live').select('*')
+  ]);
+
+  GLOBAL_PROFILS = (profilsRes.data || []).filter(p => p.email !== ADMIN_EMAIL);
+  GLOBAL_LECONS = leconsRes.data || [];
+  GLOBAL_TEMPS = tempsRes.data || [];
+  GLOBAL_PROGRESSION = progRes.data || [];
+  GLOBAL_EXAMENS = examRes.data || [];
+  GLOBAL_LIVES = livesRes.data || [];
+  GLOBAL_PRESENCES = presRes.data || [];
+
+  renderApprenantsTable();
+}
+
+function secondsForUserFormation(userId, formationId) {
+  const leconIds = GLOBAL_LECONS.filter(l => l.formation_id === formationId).map(l => l.id);
+  return GLOBAL_TEMPS.filter(t => t.user_id === userId && leconIds.includes(t.lecon_id)).reduce((s, t) => s + (t.duree_secondes || 0), 0);
+}
+
+function renderApprenantsTable() {
+  const table = document.getElementById('apprenants-table');
+  document.getElementById('apprenants-count').textContent = `${GLOBAL_PROFILS.length} apprenant${GLOBAL_PROFILS.length > 1 ? 's' : ''}`;
+
+  const formationsWithContent = FORMATIONS.filter(f => GLOBAL_LECONS.some(l => l.formation_id === f.id));
+
+  if (GLOBAL_PROFILS.length === 0) {
+    table.innerHTML = `<div class="empty-state">Aucun apprenant inscrit pour l'instant.</div>`;
+    return;
+  }
+  if (formationsWithContent.length === 0) {
+    table.innerHTML = `<div class="empty-state">Ajoute du contenu à une formation pour voir apparaître le suivi des heures.</div>`;
+  }
+
+  const icons = { transport: '🚚', vtc: '🚗', hygiene: '🍽️' };
+
+  let header = `<div class="ap-table-header"><span>Apprenant</span>`;
+  formationsWithContent.slice(0, 3).forEach(f => header += `<span>${icons[f.slug] || ''} ${escapeHtml(f.titre.split(' ')[0])}</span>`);
+  for (let i = formationsWithContent.length; i < 3; i++) header += `<span></span>`;
+  header += `<span>Dernière activité</span><span></span></div>`;
+
+  const rows = GLOBAL_PROFILS.map(p => {
+    let cells = '';
+    formationsWithContent.slice(0, 3).forEach(f => {
+      const sec = secondsForUserFormation(p.id, f.id);
+      const req = f.heures_requises_ligne ?? 105;
+      const pct = req > 0 ? Math.min(100, Math.round((sec / 3600 / req) * 100)) : 0;
+      const h = (sec / 3600).toFixed(1);
+      cells += `
+        <div class="ap-hours-cell">
+          <div class="ap-hours-val">${h}h / ${req}h <span style="color:var(--muted);">(${pct}%)</span></div>
+          <div class="ap-hours-bar"><div class="ap-hours-fill ${pct < 30 ? 'warn' : ''}" style="width:${pct}%"></div></div>
+        </div>`;
+    });
+    for (let i = formationsWithContent.length; i < 3; i++) cells += `<div class="ap-hours-empty">—</div>`;
+
+    const userTemps = GLOBAL_TEMPS.filter(t => t.user_id === p.id);
+    const lastActivity = userTemps.length > 0
+      ? new Date(Math.max(...userTemps.map(t => new Date(t.created_at || t.date).getTime()))).toLocaleDateString('fr-FR')
+      : '—';
+
+    return `
+      <div class="ap-table-row">
+        <div>
+          <div class="ap-name">${escapeHtml(p.prenom || '')} ${escapeHtml(p.nom || '')}</div>
+          <div class="ap-email">${escapeHtml(p.email || '')}</div>
+        </div>
+        ${cells}
+        <div style="font-size:0.78rem;color:var(--muted);">${lastActivity}</div>
+        <div><button class="btn btn-ghost btn-sm" onclick="showApprenantDetail('${p.id}')">Voir détail →</button></div>
+      </div>
+    `;
+  }).join('');
+
+  table.innerHTML = header + rows;
+}
+
+function showApprenantDetail(userId) {
+  const p = GLOBAL_PROFILS.find(p => p.id === userId);
+  if (!p) return;
+
+  document.getElementById('detail-name').textContent = `${p.prenom || ''} ${p.nom || ''}`.trim() || 'Apprenant';
+  document.getElementById('detail-email').textContent = p.email || '';
+
+  // ── Heures par formation ──
+  const formationsWithContent = FORMATIONS.filter(f => GLOBAL_LECONS.some(l => l.formation_id === f.id));
+  const icons = { transport: '🚚', vtc: '🚗', hygiene: '🍽️' };
+
+  const heuresEl = document.getElementById('detail-heures');
+  if (formationsWithContent.length === 0) {
+    heuresEl.innerHTML = `<div class="empty-state">Aucune formation avec contenu.</div>`;
+  } else {
+    heuresEl.innerHTML = formationsWithContent.map(f => {
+      const sec = secondsForUserFormation(userId, f.id);
+      const req = f.heures_requises_ligne ?? 105;
+      const pct = req > 0 ? Math.min(100, Math.round((sec / 3600 / req) * 100)) : 0;
+      const h = (sec / 3600).toFixed(1);
+
+      const lecons = GLOBAL_LECONS.filter(l => l.formation_id === f.id);
+      const done = lecons.filter(l => GLOBAL_PROGRESSION.some(pr => pr.user_id === userId && pr.lecon_id === l.id && pr.completee)).length;
+
+      return `
+        <div class="detail-formation-row">
+          <div class="df-name">${icons[f.slug] || '📚'} ${escapeHtml(f.titre)}</div>
+          <div>
+            <div class="df-label">Heures en ligne</div>
+            <div style="font-weight:700;">${h}h / ${req}h</div>
+            <div class="df-bar"><div class="df-fill" style="width:${pct}%"></div></div>
+          </div>
+          <div>
+            <div class="df-label">Leçons complétées</div>
+            <div style="font-weight:700;">${done} / ${lecons.length}</div>
+          </div>
+          <div>
+            <div class="df-label">Progression</div>
+            <div style="font-weight:700;color:var(--accent);">${pct}%</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── Examens blancs ──
+  const examensEl = document.getElementById('detail-examens');
+  const userExams = GLOBAL_EXAMENS.filter(e => e.user_id === userId);
+  if (userExams.length === 0) {
+    examensEl.innerHTML = `<div class="empty-state">Aucun examen passé pour l'instant.</div>`;
+  } else {
+    examensEl.innerHTML = userExams.map(e => {
+      const f = FORMATIONS.find(f => f.id === e.formation_id);
+      const lecon = GLOBAL_LECONS.find(l => l.id === e.lecon_id);
+      const label = e.lecon_id ? `Examen module — ${lecon?.titre || '—'}` : `Examen final — ${f?.titre || '—'}`;
+      const date = new Date(e.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+      return `
+        <div class="examen-row">
+          <div>${escapeHtml(label)}</div>
+          <div class="examen-score ${e.score_pct >= 70 ? 'good' : 'bad'}">${e.score_pct}%</div>
+          <div style="color:var(--muted);">${e.nb_correct}/${e.nb_questions} bonnes</div>
+          <div style="color:var(--muted);font-size:0.78rem;">${date}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ── Présences live ──
+  const livesEl = document.getElementById('detail-lives');
+  if (GLOBAL_LIVES.length === 0) {
+    livesEl.innerHTML = `<div class="empty-state">Aucune session live planifiée.</div>`;
+  } else {
+    livesEl.innerHTML = GLOBAL_LIVES.map(s => {
+      const d = new Date(s.date_heure);
+      const dateStr = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const presence = GLOBAL_PRESENCES.find(pr => pr.user_id === userId && pr.session_id === s.id);
+      const present = presence ? presence.present : null;
+
+      return `
+        <div class="live-presence-row">
+          <div>${escapeHtml(s.titre)}</div>
+          <div style="color:var(--muted);font-size:0.78rem;">${dateStr}</div>
+          <div class="presence-toggle">
+            <button class="presence-btn ${present === true ? 'active present' : ''}" onclick="setPresence('${userId}','${s.id}',true)">✓ Présent</button>
+            <button class="presence-btn ${present === false ? 'active absent' : ''}" onclick="setPresence('${userId}','${s.id}',false)">✕ Absent</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('apprenants-vue-globale').style.display = 'none';
+  document.getElementById('apprenants-vue-detail').style.display = 'block';
+}
+
+function backToApprenants() {
+  document.getElementById('apprenants-vue-detail').style.display = 'none';
+  document.getElementById('apprenants-vue-globale').style.display = 'block';
+}
+
+async function setPresence(userId, sessionId, present) {
+  const existing = GLOBAL_PRESENCES.find(p => p.user_id === userId && p.session_id === sessionId);
+  let error;
+  if (existing) {
+    ({ error } = await _supabase.from('presences_live').update({ present }).eq('id', existing.id));
+    if (!error) existing.present = present;
+  } else {
+    const { data, error: insErr } = await _supabase.from('presences_live').insert({ user_id: userId, session_id: sessionId, present }).select().single();
+    error = insErr;
+    if (data) GLOBAL_PRESENCES.push(data);
+  }
+  if (error) { showToast(error.message, true); return; }
+  showToast('Présence enregistrée ✓');
+  showApprenantDetail(userId);
+}
+
+// ══════════════ MESSAGES ══════════════
+
+async function loadMessages() {
+  const { data, error } = await _supabase.from('contacts').select('*').order('created_at', { ascending: false });
+  const list = document.getElementById('messages-list');
+  const countEl = document.getElementById('messages-count');
+
+  if (error) { list.innerHTML = `<div class="empty-state">Erreur : ${error.message}</div>`; return; }
+  if (!data || data.length === 0) { list.innerHTML = `<div class="empty-state">Aucun message reçu pour l'instant.</div>`; countEl.textContent = ''; return; }
+
+  const unread = data.filter(m => !m.lu).length;
+  countEl.textContent = `${data.length} message${data.length > 1 ? 's' : ''}${unread > 0 ? ` · ${unread} non lu${unread > 1 ? 's' : ''}` : ''}`;
+
+  list.innerHTML = data.map(m => {
+    const date = new Date(m.created_at).toLocaleString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="card" style="margin-bottom:12px; ${m.lu ? 'opacity:0.6;' : 'border-color:var(--borderh);'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:700;">${escapeHtml(m.nom)} ${!m.lu ? '<span style="color:var(--accent);font-size:0.7rem;">● nouveau</span>' : ''}</div>
+            <div style="font-size:0.78rem;color:var(--accent);">${escapeHtml(m.email)}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span style="font-size:0.75rem;color:var(--muted);">${date}</span>
+            <button class="btn btn-ghost btn-sm" onclick="toggleMessageRead('${m.id}', ${!m.lu})">${m.lu ? '↩ Marquer non lu' : '✓ Marquer lu'}</button>
+            <a class="btn btn-ghost btn-sm" href="mailto:${escapeHtml(m.email)}">↩ Répondre</a>
+          </div>
+        </div>
+        <div style="font-size:0.88rem;line-height:1.6;color:rgba(232,245,233,0.85);">${escapeHtml(m.message)}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function toggleMessageRead(id, lu) {
+  const { error } = await _supabase.from('contacts').update({ lu }).eq('id', id);
+  if (error) { showToast(error.message, true); return; }
+  loadMessages();
+}
+
+// ── UTILS ──
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  document.getElementById('toast-icon').textContent = isError ? '✕' : '✓';
+  t.classList.toggle('error', isError);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOR-EL — Cours</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const { createClient } = supabase;
+  const _supabase = createClient(
+    'https://uyovoajvjocemowrtyrs.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5b3ZvYWp2am9jZW1vd3J0eXJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExOTQ0NzYsImV4cCI6MjA5Njc3MDQ3Nn0.548_TIMsl7d99sf3evHBTI6xfPqacenJ_SmqCkwh5wk'
+  );
+</script>
+<style>
+  :root {
+    --bg:      #091808;
+    --bg2:     #0b1c0c;
+    --accent:  #2ecc71;
+    --accent2: #27ae60;
+    --accent3: #1abc9c;
+    --glass:   rgba(255,255,255,0.035);
+    --border:  rgba(46,204,113,0.15);
+    --borderh: rgba(46,204,113,0.4);
+    --text:    #e8f5e9;
+    --muted:   rgba(232,245,233,0.5);
+    --warn:    #f39c12;
+    --r:       12px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+
+  /* TOPBAR */
+  .topbar { height: 56px; flex-shrink: 0; background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 16px; }
+  .btn-back { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.85rem; text-decoration: none; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; transition: all .2s; }
+  .btn-back:hover { color: var(--text); border-color: var(--borderh); }
+  .topbar-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .chrono-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--glass); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px;
+    font-size: 0.8rem; font-weight: 600; flex-shrink: 0;
+  }
+  .chrono-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.5s infinite; }
+  .chrono-dot.paused { background: var(--warn); animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+  /* BODY */
+  .body-wrap { flex: 1; display: flex; overflow: hidden; }
+
+  /* SIDEBAR */
+  .lessons-sidebar { width: 280px; flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+  .ls-header { padding: 16px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+  .ls-formation-name { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+  .ls-meta { font-size: 0.72rem; color: var(--muted); }
+
+  .module-group { border-bottom: 1px solid rgba(46,204,113,0.06); }
+  .module-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; transition: background .15s; }
+  .module-header:hover { background: rgba(46,204,113,0.03); }
+  .module-name { font-size: 0.82rem; font-weight: 600; }
+  .module-progress { font-size: 0.7rem; color: var(--accent); }
+  .module-arrow { font-size: 0.7rem; color: var(--muted); transition: transform .2s; display: inline-block; }
+  .module-arrow.open { transform: rotate(90deg); }
+
+  .lecon-item { display: flex; align-items: center; gap: 10px; padding: 10px 16px 10px 28px; cursor: pointer; transition: background .15s; border-left: 2px solid transparent; }
+  .lecon-item:hover { background: rgba(46,204,113,0.04); }
+  .lecon-item.active { background: rgba(46,204,113,0.08); border-left-color: var(--accent); }
+  .li-icon { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; }
+  .li-icon.video { background: rgba(46,204,113,0.12); }
+  .li-icon.examen_blanc { background: rgba(26,188,156,0.12); }
+  .li-icon.document { background: rgba(39,174,96,0.12); }
+  .li-icon.done-icon { background: rgba(46,204,113,0.2); color: var(--accent); }
+  .li-info { flex: 1; min-width: 0; }
+  .li-title { font-size: 0.78rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .li-meta { font-size: 0.68rem; color: var(--muted); margin-top: 1px; }
+
+  /* PLAYER AREA */
+  .player-area { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  .video-container { background: #000; position: relative; padding-top: 42%; flex-shrink: 0; }
+  .video-container iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+  .video-placeholder {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 12px; background: linear-gradient(135deg, #050e05, #091808); color: var(--muted);
+  }
+
+  .lesson-info-bar { padding: 20px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .lib-left { flex: 1; min-width: 200px; }
+  .lib-tag { font-size: 0.7rem; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+  .lib-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; margin-bottom: 6px; }
+  .lib-meta { font-size: 0.82rem; color: var(--muted); display: flex; gap: 16px; flex-wrap: wrap; }
+  .lib-right { display: flex; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+  .btn-done { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-weight: 700; font-size: 0.85rem; border: none; border-radius: 30px; padding: 10px 20px; cursor: pointer; box-shadow: 0 4px 14px rgba(46,204,113,0.3); transition: transform .2s; }
+  .btn-done:hover { transform: translateY(-2px); }
+  .btn-done.marked { background: rgba(46,204,113,0.15); color: var(--accent); box-shadow: none; border: 1px solid var(--border); }
+  .btn-nav { background: var(--glass); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem; font-weight: 600; border-radius: 30px; padding: 10px 16px; cursor: pointer; transition: all .2s; }
+  .btn-nav:hover { border-color: var(--borderh); }
+  .btn-nav:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* tabs */
+  .content-tabs { padding: 0 28px; border-bottom: 1px solid var(--border); display: flex; gap: 0; }
+  .ctab { padding: 14px 20px; font-size: 0.85rem; font-weight: 600; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all .2s; background: none; border-top: none; border-left: none; border-right: none; }
+  .ctab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .ctab:hover { color: var(--text); }
+
+  .tab-content { padding: 24px 28px; flex: 1; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .fiche { font-size: 0.92rem; line-height: 1.8; color: rgba(232,245,233,0.85); white-space: pre-wrap; }
+  .fiche.empty { color: var(--muted); font-style: italic; }
+
+  .notes-area { width: 100%; min-height: 200px; background: var(--glass); border: 1px solid var(--border); border-radius: var(--r); color: var(--text); font-family: 'Inter', sans-serif; font-size: 0.9rem; padding: 16px; resize: vertical; outline: none; line-height: 1.7; transition: border-color .2s; }
+  .notes-area:focus { border-color: var(--accent); }
+  .notes-save { margin-top: 10px; background: var(--glass); border: 1px solid var(--border); color: var(--text); font-size: 0.85rem; font-weight: 600; border-radius: 8px; padding: 8px 16px; cursor: pointer; transition: all .2s; }
+  .notes-save:hover { border-color: var(--accent); color: var(--accent); }
+
+  .qcm-teaser { background: rgba(46,204,113,0.05); border: 1px solid var(--border); border-radius: var(--r); padding: 24px; text-align: center; }
+  .qcm-teaser h3 { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; margin-bottom: 8px; }
+  .qcm-teaser p { font-size: 0.88rem; color: var(--muted); margin-bottom: 20px; }
+  .btn-start-qcm { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-weight: 700; font-size: 0.95rem; border: none; border-radius: 30px; padding: 12px 28px; cursor: pointer; box-shadow: 0 4px 16px rgba(46,204,113,0.3); transition: transform .2s; text-decoration: none; display: inline-block; }
+  .btn-start-qcm:hover { transform: translateY(-2px); }
+
+  .toast { position: fixed; bottom: 24px; right: 24px; background: rgba(10,30,12,0.95); border: 1px solid var(--border); backdrop-filter: blur(16px); border-radius: 12px; padding: 12px 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; transform: translateY(80px); transition: transform .3s; z-index: 999; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .toast.show { transform: translateY(0); }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 0.88rem; }
+
+  @media (max-width: 900px) { .lessons-sidebar { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="dashboard-apprenant.html" class="btn-back">← Tableau de bord</a>
+  <div class="topbar-title" id="topbar-title">Chargement…</div>
+  <div class="chrono-badge">
+    <div class="chrono-dot" id="chrono-dot"></div>
+    <span id="chrono-text">00:00:00</span>
+  </div>
+</div>
+
+<div class="body-wrap">
+  <aside class="lessons-sidebar">
+    <div class="ls-header">
+      <div class="ls-formation-name" id="ls-formation-name">…</div>
+      <div class="ls-meta" id="ls-meta">…</div>
+    </div>
+    <div id="modules-list">
+      <div class="empty-state">Chargement…</div>
+    </div>
+  </aside>
+
+  <div class="player-area">
+    <div class="video-container" id="video-zone">
+      <div class="video-placeholder" id="video-placeholder">
+        <span style="font-size:2rem;">📄</span>
+        <span id="video-placeholder-text">Document — pas de vidéo</span>
+      </div>
+    </div>
+
+    <div class="lesson-info-bar">
+      <div class="lib-left">
+        <div class="lib-tag" id="lib-tag">…</div>
+        <div class="lib-title" id="lib-title">Chargement…</div>
+        <div class="lib-meta">
+          <span>⏱ <span id="lib-duree">—</span> min</span>
+          <span id="lib-statut-txt" style="color:var(--muted)">○ À faire</span>
+        </div>
+      </div>
+      <div class="lib-right">
+        <button class="btn-nav" id="btn-prev" onclick="navLecon(-1)">← Préc.</button>
+        <button class="btn-done" id="btn-done" onclick="marquerFait()">✓ Marquer comme fait</button>
+        <button class="btn-nav" id="btn-next" onclick="navLecon(1)">Suiv. →</button>
+      </div>
+    </div>
+
+    <div class="content-tabs">
+      <button class="ctab active" onclick="switchTab('fiche', this)">📄 Fiche de cours</button>
+      <button class="ctab" onclick="switchTab('notes', this)">📝 Mes notes</button>
+    </div>
+
+    <div class="tab-content">
+      <div class="tab-panel active" id="tab-fiche">
+        <div class="fiche" id="fiche-content">Chargement…</div>
+        <div id="examen-teaser" style="display:none; margin-top:20px;">
+          <div class="qcm-teaser">
+            <h3>📝 Examen blanc</h3>
+            <p>Ce module se termine par un examen blanc en conditions réelles.</p>
+            <a href="qcm.html" class="btn-start-qcm">Démarrer l'examen blanc →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-notes">
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:14px;">Vos notes sont sauvegardées automatiquement sur cet appareil.</p>
+        <textarea class="notes-area" id="notes-area" placeholder="Écrivez vos notes ici…"></textarea>
+        <button class="notes-save" onclick="saveNotes()">💾 Sauvegarder les notes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span>✓</span><span id="toast-msg">Message</span></div>
+
+<script>
+let userId = null;
+let FORMATION = null;
+let LECONS = [];
+let PROGRESSION = [];
+let currentLecon = null;
+let openModules = new Set();
+
+// ── CHRONO ──
+let activeSeconds = 0;
+let lastActivity = Date.now();
+let chronoInterval = null;
+const INACTIVITY_LIMIT = 5 * 60 * 1000; // 5 min
+
+['mousemove','keydown','click','scroll','touchstart'].forEach(evt => {
+  document.addEventListener(evt, () => { lastActivity = Date.now(); });
+});
+
+function startChrono() {
+  if (chronoInterval) clearInterval(chronoInterval);
+  chronoInterval = setInterval(() => {
+    const isActive = (Date.now() - lastActivity) < INACTIVITY_LIMIT && document.visibilityState === 'visible';
+    document.getElementById('chrono-dot').classList.toggle('paused', !isActive);
+    if (isActive) {
+      activeSeconds++;
+      updateChronoDisplay();
+    }
+    // Sauvegarde toutes les 30s
+    if (activeSeconds > 0 && activeSeconds % 30 === 0) flushChrono();
+  }, 1000);
+}
+
+function updateChronoDisplay() {
+  const h = Math.floor(activeSeconds / 3600);
+  const m = Math.floor((activeSeconds % 3600) / 60);
+  const s = activeSeconds % 60;
+  document.getElementById('chrono-text').textContent =
+    `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+let lastFlushed = 0;
+async function flushChrono() {
+  const toSave = activeSeconds - lastFlushed;
+  if (toSave <= 0 || !currentLecon) return;
+  lastFlushed = activeSeconds;
+  await _supabase.from('temps_passe').insert({
+    user_id: userId,
+    lecon_id: currentLecon.id,
+    duree_secondes: toSave,
+    date: new Date().toISOString().slice(0,10)
+  });
+}
+
+window.addEventListener('beforeunload', () => { flushChrono(); });
+
+// ── INIT ──
+async function init() {
+  const { data: { user } } = await _supabase.auth.getUser();
+  if (!user) { window.location.href = 'jorel-auth.html'; return; }
+  userId = user.id;
+
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('formation');
+  const leconIdParam = params.get('lecon');
+
+  if (!slug) { window.location.href = 'dashboard-apprenant.html'; return; }
+
+  const { data: formation } = await _supabase.from('formations').select('*').eq('slug', slug).single();
+  if (!formation) { window.location.href = 'dashboard-apprenant.html'; return; }
+  FORMATION = formation;
+
+  const [leconsRes, progressionRes] = await Promise.all([
+    _supabase.from('lecons').select('*').eq('formation_id', formation.id).order('ordre', { ascending: true }),
+    _supabase.from('progression').select('*').eq('user_id', userId)
+  ]);
+  LECONS = leconsRes.data || [];
+  PROGRESSION = progressionRes.data || [];
+
+  document.getElementById('topbar-title').textContent = formation.titre;
+  document.getElementById('ls-formation-name').textContent = formation.titre;
+  const nbModules = new Set(LECONS.map(l => l.module_nom || 'Module')).size;
+  document.getElementById('ls-meta').textContent = `${nbModules} module${nbModules > 1 ? 's' : ''} · ${LECONS.length} leçon${LECONS.length > 1 ? 's' : ''}`;
+
+  if (LECONS.length === 0) {
+    document.getElementById('modules-list').innerHTML = `<div class="empty-state">Aucune leçon disponible pour l'instant.</div>`;
+    document.getElementById('lib-title').textContent = 'Aucun contenu';
+    document.getElementById('fiche-content').textContent = "Le formateur n'a pas encore ajouté de leçons pour cette formation.";
+    return;
+  }
+
+  // Ouvrir le premier module par défaut
+  const firstModule = LECONS[0]?.module_nom || 'Module';
+  openModules.add(firstModule);
+
+  // Choisir la leçon à afficher
+  let targetLecon = LECONS.find(l => l.id === leconIdParam);
+  if (!targetLecon) targetLecon = LECONS.find(l => !isLeconDone(l.id)) || LECONS[0];
+
+  renderModules();
+  loadLecon(targetLecon.id);
+  startChrono();
+}
+
+// ── HELPERS ──
+function isLeconDone(leconId) {
+  const p = PROGRESSION.find(p => p.lecon_id === leconId);
+  return p ? !!p.completee : false;
+}
+function getYoutubeId(url) {
+  if (!url) return null;
+  const m = url.match(/(?:youtu\.be\/|v=|embed\/)([A-Za-z0-9_-]{6,})/);
+  return m ? m[1] : null;
+}
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+// ── RENDER MODULES SIDEBAR ──
+function renderModules() {
+  const container = document.getElementById('modules-list');
+  const typeIcon = { video: '▶', examen_blanc: '❓', document: '📄' };
+
+  // Grouper par module en préservant l'ordre d'apparition
+  const groups = [];
+  LECONS.forEach(l => {
+    const name = l.module_nom || 'Module';
+    let g = groups.find(g => g.name === name);
+    if (!g) { g = { name, lecons: [] }; groups.push(g); }
+    g.lecons.push(l);
+  });
+
+  container.innerHTML = groups.map(g => {
+    const total = g.lecons.length;
+    const done = g.lecons.filter(l => isLeconDone(l.id)).length;
+    const isOpen = openModules.has(g.name);
+
+    return `
+      <div class="module-group">
+        <div class="module-header" onclick="toggleModule('${g.name.replace(/'/g,"\\'")}')">
+          <div class="module-name">${escapeHtml(g.name)}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="module-progress">${done}/${total}</span>
+            <span class="module-arrow ${isOpen ? 'open' : ''}">›</span>
+          </div>
+        </div>
+        ${isOpen ? g.lecons.map(l => {
+          const done = isLeconDone(l.id);
+          return `
+            <div class="lecon-item ${currentLecon && l.id === currentLecon.id ? 'active' : ''}" onclick="loadLecon('${l.id}')">
+              <div class="li-icon ${done ? 'done-icon' : l.type}">${done ? '✓' : (typeIcon[l.type] || '▶')}</div>
+              <div class="li-info">
+                <div class="li-title">${escapeHtml(l.titre)}</div>
+                <div class="li-meta">${l.duree_minutes || '—'} min</div>
+              </div>
+            </div>
+          `;
+        }).join('') : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleModule(name) {
+  if (openModules.has(name)) openModules.delete(name);
+  else openModules.add(name);
+  renderModules();
+}
+
+// ── CHARGER UNE LEÇON ──
+function loadLecon(id) {
+  // flush du temps de la leçon précédente
+  flushChrono();
+  activeSeconds = 0;
+  lastFlushed = 0;
+  updateChronoDisplay();
+
+  const lecon = LECONS.find(l => l.id === id);
+  if (!lecon) return;
+  currentLecon = lecon;
+
+  const idx = LECONS.findIndex(l => l.id === id);
+  document.getElementById('lib-tag').textContent = `📚 ${lecon.module_nom || 'Module'} · Leçon ${idx + 1}/${LECONS.length}`;
+  document.getElementById('lib-title').textContent = lecon.titre;
+  document.getElementById('lib-duree').textContent = lecon.duree_minutes || '—';
+
+  // Video / placeholder
+  const videoZone = document.getElementById('video-zone');
+  const ytId = getYoutubeId(lecon.youtube_url);
+  if (lecon.type === 'video' && ytId) {
+    videoZone.innerHTML = `<iframe src="https://www.youtube.com/embed/${ytId}" title="${escapeHtml(lecon.titre)}" allowfullscreen></iframe>`;
+    videoZone.style.display = 'block';
+  } else if (lecon.type === 'examen_blanc') {
+    videoZone.innerHTML = `<div class="video-placeholder"><span style="font-size:2rem;">📝</span><span>Examen blanc</span></div>`;
+  } else {
+    videoZone.innerHTML = `<div class="video-placeholder"><span style="font-size:2rem;">📄</span><span>Document — pas de vidéo</span></div>`;
+  }
+
+  // Fiche de cours
+  const ficheEl = document.getElementById('fiche-content');
+  if (lecon.contenu_texte && lecon.contenu_texte.trim()) {
+    ficheEl.textContent = lecon.contenu_texte;
+    ficheEl.classList.remove('empty');
+  } else {
+    ficheEl.textContent = "Aucun contenu de fiche n'a été ajouté pour cette leçon.";
+    ficheEl.classList.add('empty');
+  }
+
+  // Examen blanc teaser
+  document.getElementById('examen-teaser').style.display = lecon.type === 'examen_blanc' ? 'block' : 'none';
+
+  // Statut
+  const done = isLeconDone(lecon.id);
+  const btnDone = document.getElementById('btn-done');
+  btnDone.textContent = done ? '✓ Complétée' : '✓ Marquer comme fait';
+  btnDone.classList.toggle('marked', done);
+  document.getElementById('lib-statut-txt').textContent = done ? '✓ Complétée' : '○ À faire';
+  document.getElementById('lib-statut-txt').style.color = done ? 'var(--accent)' : 'var(--muted)';
+
+  // Nav buttons
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-next').disabled = idx === LECONS.length - 1;
+
+  // Notes
+  loadNotes();
+
+  // URL update (sans reload)
+  const url = new URL(window.location);
+  url.searchParams.set('lecon', lecon.id);
+  window.history.replaceState({}, '', url);
+
+  renderModules();
+}
+
+// ── MARQUER COMME FAIT ──
+async function marquerFait() {
+  if (!currentLecon) return;
+  const existing = PROGRESSION.find(p => p.lecon_id === currentLecon.id);
+
+  const payload = {
+    user_id: userId,
+    lecon_id: currentLecon.id,
+    completee: true,
+    completed_at: new Date().toISOString()
+  };
+
+  let error;
+  if (existing) {
+    ({ error } = await _supabase.from('progression').update(payload).eq('id', existing.id));
+    existing.completee = true;
+  } else {
+    const { data, error: insErr } = await _supabase.from('progression').insert(payload).select().single();
+    error = insErr;
+    if (data) PROGRESSION.push(data);
+  }
+
+  if (error) { showToast(error.message); return; }
+  showToast('Leçon marquée comme complétée ✓');
+  loadLecon(currentLecon.id);
+  setTimeout(() => navLecon(1), 1000);
+}
+
+// ── NAV ──
+function navLecon(dir) {
+  if (!currentLecon) return;
+  const idx = LECONS.findIndex(l => l.id === currentLecon.id);
+  const next = LECONS[idx + dir];
+  if (next) loadLecon(next.id);
+}
+
+// ── TABS ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+// ── NOTES (locales) ──
+function loadNotes() {
+  const saved = localStorage.getItem(`notes_${currentLecon.id}`);
+  document.getElementById('notes-area').value = saved || '';
+}
+function saveNotes() {
+  const val = document.getElementById('notes-area').value;
+  localStorage.setItem(`notes_${currentLecon.id}`, val);
+  showToast('Notes sauvegardées ✓');
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>

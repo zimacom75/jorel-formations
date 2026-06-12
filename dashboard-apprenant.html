@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOR-EL — Mon espace</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const { createClient } = supabase;
+  const _supabase = createClient(
+    'https://uyovoajvjocemowrtyrs.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5b3ZvYWp2am9jZW1vd3J0eXJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExOTQ0NzYsImV4cCI6MjA5Njc3MDQ3Nn0.548_TIMsl7d99sf3evHBTI6xfPqacenJ_SmqCkwh5wk'
+  );
+  const ADMIN_EMAIL = 'zimacom75@gmail.com';
+</script>
+<style>
+  :root {
+    --bg:      #091808;
+    --bg2:     #0b1c0c;
+    --bg3:     #0d2210;
+    --accent:  #2ecc71;
+    --accent2: #27ae60;
+    --accent3: #1abc9c;
+    --glass:   rgba(255,255,255,0.035);
+    --border:  rgba(46,204,113,0.15);
+    --borderh: rgba(46,204,113,0.4);
+    --text:    #e8f5e9;
+    --muted:   rgba(232,245,233,0.5);
+    --sidebar: 240px;
+    --r:       14px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: var(--sidebar); flex-shrink: 0;
+    background: var(--bg2); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; padding: 28px 0;
+    position: sticky; top: 0; height: 100vh; z-index: 10;
+  }
+  .sidebar-logo { padding: 0 24px 28px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .logo-text {
+    font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .logo-sub { font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); }
+
+  .nav-section { padding: 0 12px; margin-bottom: 8px; }
+  .nav-label { font-size: 0.65rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); padding: 0 12px; margin-bottom: 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px; cursor: pointer;
+    font-size: 0.88rem; color: var(--muted); font-weight: 500;
+    transition: all .2s; text-decoration: none; margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--glass); color: var(--text); }
+  .nav-item.active { background: rgba(46,204,113,0.12); color: var(--accent); border: 1px solid rgba(46,204,113,0.2); }
+  .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+  .sidebar-footer { margin-top: auto; padding: 20px 12px 0; border-top: 1px solid var(--border); }
+  .user-pill {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 10px;
+    background: var(--glass); border: 1px solid var(--border);
+  }
+  .user-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent3));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 700; flex-shrink: 0;
+  }
+  .user-name { font-size: 0.82rem; font-weight: 600; }
+  .user-role { font-size: 0.7rem; color: var(--muted); }
+  .btn-logout { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; margin-left: auto; transition: color .2s; }
+  .btn-logout:hover { color: #ff6b6b; }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  .topbar {
+    padding: 20px 36px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: rgba(9,24,8,0.8); backdrop-filter: blur(12px);
+    position: sticky; top: 0; z-index: 5; flex-wrap: wrap; gap: 12px;
+  }
+  .topbar-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; }
+
+  /* ── COMPTEUR D'HEURES (header) ── */
+  .hours-counter {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--glass); border: 1px solid var(--border);
+    backdrop-filter: blur(12px); border-radius: 40px; padding: 8px 20px 8px 8px;
+  }
+  .hc-ring { width: 38px; height: 38px; flex-shrink: 0; position: relative; }
+  .hc-ring svg { transform: rotate(-90deg); }
+  .hc-ring-bg { stroke: rgba(255,255,255,0.08); }
+  .hc-ring-fill { stroke: var(--accent); stroke-linecap: round; transition: stroke-dashoffset .8s ease; }
+  .hc-text { display: flex; flex-direction: column; }
+  .hc-val { font-family: 'Syne', sans-serif; font-size: 0.92rem; font-weight: 800; line-height: 1.1; }
+  .hc-val span { color: var(--accent); }
+  .hc-label { font-size: 0.68rem; color: var(--muted); }
+
+  .content { padding: 32px 36px; flex: 1; }
+
+  /* welcome */
+  .welcome-row { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
+  .welcome-title { font-family: 'Syne', sans-serif; font-size: 1.7rem; font-weight: 800; letter-spacing: -0.5px; }
+  .welcome-title span { background: linear-gradient(135deg, var(--accent), var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .welcome-sub { font-size: 0.9rem; color: var(--muted); margin-top: 4px; }
+  .btn-reprendre {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; font-weight: 700; font-size: 0.88rem;
+    border: none; border-radius: 30px; padding: 11px 22px; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(46,204,113,0.3); transition: transform .2s; white-space: nowrap;
+  }
+  .btn-reprendre:hover { transform: translateY(-2px); }
+
+  /* stats row */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(12px); border-radius: var(--r); padding: 20px; transition: border-color .2s; }
+  .stat-card:hover { border-color: var(--borderh); }
+  .stat-icon { font-size: 1.3rem; margin-bottom: 10px; }
+  .stat-val { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .stat-label { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+  .sec-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+  .sec-title span { font-size: 0.72rem; font-weight: 600; color: var(--accent); background: rgba(46,204,113,0.1); border-radius: 20px; padding: 3px 10px; }
+
+  /* formations en cours */
+  .formations-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+  .formation-card { background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(16px); border-radius: var(--r); overflow: hidden; transition: transform .25s, border-color .25s; cursor: pointer; }
+  .formation-card:hover { transform: translateY(-4px); border-color: var(--borderh); }
+  .fc-header { padding: 20px 20px 16px; }
+  .fc-icon { font-size: 1.8rem; margin-bottom: 12px; }
+  .fc-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; line-height: 1.3; }
+  .fc-meta { font-size: 0.75rem; color: var(--muted); }
+  .fc-progress { padding: 0 20px 20px; }
+  .prog-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .prog-label { font-size: 0.75rem; color: var(--muted); }
+  .prog-pct { font-size: 0.8rem; font-weight: 700; color: var(--accent); }
+  .prog-bar { height: 6px; background: rgba(255,255,255,0.07); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--accent3)); transition: width 1s ease; }
+  .fc-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .fc-next { font-size: 0.75rem; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fc-next strong { color: var(--text); font-weight: 600; }
+  .btn-continuer { font-size: 0.75rem; font-weight: 700; color: var(--accent); background: rgba(46,204,113,0.1); border: 1px solid rgba(46,204,113,0.2); border-radius: 20px; padding: 5px 12px; cursor: pointer; transition: background .2s; white-space: nowrap; flex-shrink: 0; }
+  .btn-continuer:hover { background: rgba(46,204,113,0.2); }
+
+  /* bottom grid */
+  .bottom-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  .lessons-card { background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(16px); border-radius: var(--r); overflow: hidden; }
+  .card-header { padding: 18px 20px; border-bottom: 1px solid var(--border); }
+  .lesson-list { padding: 8px 0; }
+  .lesson-item { display: flex; align-items: center; gap: 14px; padding: 12px 20px; transition: background .15s; cursor: pointer; }
+  .lesson-item:hover { background: rgba(46,204,113,0.04); }
+  .lesson-ico { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+  .ico-video { background: rgba(46,204,113,0.12); border: 1px solid rgba(46,204,113,0.2); }
+  .ico-examen_blanc { background: rgba(26,188,156,0.12); border: 1px solid rgba(26,188,156,0.2); }
+  .ico-document { background: rgba(39,174,96,0.12); border: 1px solid rgba(39,174,96,0.2); }
+  .lesson-info { flex: 1; min-width: 0; }
+  .lesson-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .lesson-sub { font-size: 0.72rem; color: var(--muted); }
+  .lesson-status { flex-shrink: 0; }
+  .status-done { font-size: 0.72rem; color: var(--accent); background: rgba(46,204,113,0.1); border-radius: 20px; padding: 3px 9px; }
+  .status-todo { font-size: 0.72rem; color: var(--muted); background: rgba(255,255,255,0.05); border-radius: 20px; padding: 3px 9px; }
+
+  /* lives card */
+  .lives-card { background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(16px); border-radius: var(--r); overflow: hidden; }
+  .live-item { display: flex; align-items: center; gap: 14px; padding: 14px 20px; border-bottom: 1px solid rgba(46,204,113,0.06); }
+  .live-item:last-child { border-bottom: none; }
+  .live-day-badge {
+    width: 48px; height: 48px; border-radius: 12px; flex-shrink: 0;
+    background: rgba(46,204,113,0.1); border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .live-day-num { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--accent); line-height: 1; }
+  .live-day-name { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .live-info { flex: 1; min-width: 0; }
+  .live-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; }
+  .live-time { font-size: 0.72rem; color: var(--muted); }
+  .btn-join {
+    font-size: 0.75rem; font-weight: 700; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 20px; padding: 6px 14px; text-decoration: none; white-space: nowrap; flex-shrink: 0;
+  }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: rgba(10,30,12,0.95); border: 1px solid var(--border);
+    backdrop-filter: blur(16px); border-radius: 12px; padding: 12px 20px;
+    font-size: 0.85rem; display: flex; align-items: center; gap: 8px;
+    transform: translateY(80px); transition: transform .3s; z-index: 999;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .toast.show { transform: translateY(0); }
+
+  .empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 0.88rem; }
+
+  @media (max-width: 1100px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .formations-grid { grid-template-columns: 1fr 1fr; }
+    .bottom-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .content { padding: 20px 16px; }
+    .formations-grid { grid-template-columns: 1fr; }
+    .topbar { padding: 16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-text">JOR-EL</div>
+    <div class="logo-sub">Formations</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Menu</div>
+    <a class="nav-item active" href="dashboard-apprenant.html"><span class="nav-icon">🏠</span> Tableau de bord</a>
+    <a class="nav-item" href="cours.html"><span class="nav-icon">📚</span> Mes cours</a>
+    <a class="nav-item" href="qcm.html"><span class="nav-icon">📝</span> Examens blancs</a>
+      <a class="nav-item" href="lives.html"><span class="nav-icon">🔴</span> Sessions Live</a>
+    <a class="nav-item" href="#" id="nav-admin" style="display:none;"><span class="nav-icon">👨‍🏫</span> Espace formateur</a>
+  </div>
+
+  <div class="nav-section" style="margin-top: 12px;">
+    <div class="nav-label">Compte</div>
+    <a class="nav-item" href="#"><span class="nav-icon">👤</span> Mon profil</a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="user-avatar" id="sidebar-avatar">?</div>
+      <div>
+        <div class="user-name" id="sidebar-name">Chargement…</div>
+        <div class="user-role">Apprenant</div>
+      </div>
+      <button class="btn-logout" onclick="logout()" title="Se déconnecter">⏻</button>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-greeting">Bonjour 👋</div>
+
+    <!-- COMPTEUR D'HEURES -->
+    <div class="hours-counter">
+      <div class="hc-ring">
+        <svg width="38" height="38">
+          <circle class="hc-ring-bg" cx="19" cy="19" r="15" fill="none" stroke-width="4"/>
+          <circle class="hc-ring-fill" id="hc-circle" cx="19" cy="19" r="15" fill="none" stroke-width="4"
+                  stroke-dasharray="94" stroke-dashoffset="94"/>
+        </svg>
+      </div>
+      <div class="hc-text">
+        <div class="hc-val"><span id="hc-faites">0h</span> / <span id="hc-requises">—h</span></div>
+        <div class="hc-label">Heures de formation</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="welcome-row">
+      <div>
+        <div class="welcome-title">Bon retour, <span id="welcome-name">…</span> 👋</div>
+        <div class="welcome-sub" id="welcome-sub">Chargement de vos formations…</div>
+      </div>
+      <button class="btn-reprendre" onclick="goToNextLesson()">▶ Reprendre ma formation</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-val" id="stat-formations">—</div>
+        <div class="stat-label">Formation(s) active(s)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-val" id="stat-lecons">—</div>
+        <div class="stat-label">Leçons complétées</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">⏱</div>
+        <div class="stat-val" id="stat-heures-semaine">—</div>
+        <div class="stat-label">Heures cette semaine</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-val" id="stat-restant">—</div>
+        <div class="stat-label">Heures restantes</div>
+      </div>
+    </div>
+
+    <div class="sec-title">Mes formations <span id="nb-formations">0 active</span></div>
+    <div class="formations-grid" id="formations-grid">
+      <div class="empty-state" style="grid-column:1/-1;">Chargement de vos formations…</div>
+    </div>
+
+    <div class="bottom-grid">
+      <div class="lessons-card">
+        <div class="card-header">
+          <div class="sec-title" style="margin:0">Prochaines leçons <span>À faire</span></div>
+        </div>
+        <div class="lesson-list" id="lessons-list">
+          <div class="empty-state">Chargement…</div>
+        </div>
+      </div>
+
+      <div class="lives-card">
+        <div class="card-header">
+          <div class="sec-title" style="margin:0">🔴 Prochains lives</div>
+        </div>
+        <div id="lives-list">
+          <div class="empty-state">Chargement…</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<div class="toast" id="toast"><span id="toast-icon">✓</span><span id="toast-msg">Message</span></div>
+
+<script>
+const ICONS = { transport: '🚚', vtc: '🚗', hygiene: '🍽️' };
+let userId = null;
+let FORMATIONS = [];
+let LECONS = [];
+let PROGRESSION = [];
+let TEMPS_PASSE = [];
+
+async function init() {
+  const { data: { user } } = await _supabase.auth.getUser();
+  if (!user) { window.location.href = 'jorel-auth.html'; return; }
+  userId = user.id;
+
+  const meta = user.user_metadata;
+  const prenom = meta?.prenom || user.email.split('@')[0];
+  document.getElementById('welcome-name').textContent = prenom;
+  document.getElementById('topbar-greeting').textContent = `Bonjour ${prenom} 👋`;
+  document.getElementById('sidebar-name').textContent = `${prenom} ${meta?.nom || ''}`.trim();
+  document.getElementById('sidebar-avatar').textContent = prenom.charAt(0).toUpperCase();
+
+  if (user.email === ADMIN_EMAIL) {
+    const navAdmin = document.getElementById('nav-admin');
+    navAdmin.style.display = 'flex';
+    navAdmin.href = 'admin.html';
+  }
+
+  // Charger toutes les données en parallèle
+  const [formationsRes, leconsRes, progressionRes, tempsRes] = await Promise.all([
+    _supabase.from('formations').select('*').order('titre'),
+    _supabase.from('lecons').select('*').order('ordre', { ascending: true }),
+    _supabase.from('progression').select('*').eq('user_id', userId),
+    _supabase.from('temps_passe').select('*').eq('user_id', userId)
+  ]);
+
+  FORMATIONS = formationsRes.data || [];
+  LECONS = leconsRes.data || [];
+  PROGRESSION = progressionRes.data || [];
+  TEMPS_PASSE = tempsRes.data || [];
+
+  render();
+}
+
+// ── HELPERS ──
+function secondsForFormation(formationId) {
+  const leconIds = LECONS.filter(l => l.formation_id === formationId).map(l => l.id);
+  return TEMPS_PASSE.filter(t => leconIds.includes(t.lecon_id)).reduce((sum, t) => sum + (t.duree_secondes || 0), 0);
+}
+function isLeconDone(leconId) {
+  const p = PROGRESSION.find(p => p.lecon_id === leconId);
+  return p ? !!p.completee : false;
+}
+function fmtHours(sec) {
+  const h = sec / 3600;
+  return h < 10 ? h.toFixed(1) : Math.round(h).toString();
+}
+
+// ── RENDER ──
+function render() {
+  const formationsWithContent = FORMATIONS.filter(f => LECONS.some(l => l.formation_id === f.id));
+
+  // ── COMPTEUR D'HEURES GLOBAL ──
+  let totalSeconds = 0, totalRequiredHours = 0;
+  formationsWithContent.forEach(f => {
+    totalSeconds += secondsForFormation(f.id);
+    totalRequiredHours += (f.heures_requises_ligne ?? 105);
+  });
+  const totalHoursDone = totalSeconds / 3600;
+  const pctGlobal = totalRequiredHours > 0 ? Math.min(100, (totalHoursDone / totalRequiredHours) * 100) : 0;
+
+  document.getElementById('hc-faites').textContent = fmtHours(totalSeconds) + 'h';
+  document.getElementById('hc-requises').textContent = totalRequiredHours + 'h';
+  const circumference = 2 * Math.PI * 15;
+  const offset = circumference - (pctGlobal / 100) * circumference;
+  document.getElementById('hc-circle').style.strokeDasharray = circumference;
+  setTimeout(() => { document.getElementById('hc-circle').style.strokeDashoffset = offset; }, 200);
+
+  // ── STATS ──
+  const leconsCompletes = PROGRESSION.filter(p => p.completee).length;
+  document.getElementById('stat-formations').textContent = formationsWithContent.length;
+  document.getElementById('stat-lecons').textContent = leconsCompletes;
+  document.getElementById('stat-heures-semaine').textContent = fmtHours(weekSeconds()) + 'h';
+  document.getElementById('stat-restant').textContent = Math.max(0, Math.round(totalRequiredHours - totalHoursDone)) + 'h';
+
+  document.getElementById('nb-formations').textContent = `${formationsWithContent.length} active${formationsWithContent.length > 1 ? 's' : ''}`;
+
+  if (formationsWithContent.length === 0) {
+    document.getElementById('welcome-sub').textContent = "Aucun contenu n'a encore été ajouté à vos formations.";
+  } else {
+    const remaining = Math.max(0, Math.round(totalRequiredHours - totalHoursDone));
+    document.getElementById('welcome-sub').innerHTML = `Il vous reste <strong style="color:var(--accent)">${remaining}h</strong> de formation en ligne à compléter.`;
+  }
+
+  renderFormations(formationsWithContent);
+  renderLessons(formationsWithContent);
+  renderLives();
+}
+
+function weekSeconds() {
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
+  return TEMPS_PASSE.filter(t => new Date(t.created_at || t.date) >= weekAgo)
+    .reduce((sum, t) => sum + (t.duree_secondes || 0), 0);
+}
+
+function renderFormations(formations) {
+  const grid = document.getElementById('formations-grid');
+
+  if (formations.length === 0) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">📭 Aucune leçon n'a encore été ajoutée par le formateur. Revenez bientôt !</div>`;
+    return;
+  }
+
+  grid.innerHTML = formations.map(f => {
+    const lecons = LECONS.filter(l => l.formation_id === f.id);
+    const modules = new Set(lecons.map(l => l.module_nom || 'Sans module'));
+    const totalSec = secondsForFormation(f.id);
+    const requiredH = f.heures_requises_ligne ?? 105;
+    const pct = requiredH > 0 ? Math.min(100, Math.round((totalSec / 3600 / requiredH) * 100)) : 0;
+
+    const next = lecons.find(l => !isLeconDone(l.id));
+    const nextLabel = next ? next.titre : 'Toutes les leçons complétées 🎉';
+
+    return `
+      <div class="formation-card" onclick="window.location.href='cours.html?formation=${f.slug}'">
+        <div class="fc-header">
+          <div class="fc-icon">${ICONS[f.slug] || '📚'}</div>
+          <div class="fc-title">${escapeHtml(f.titre)}</div>
+          <div class="fc-meta">${modules.size} module${modules.size > 1 ? 's' : ''} · ${lecons.length} leçon${lecons.length > 1 ? 's' : ''}</div>
+        </div>
+        <div class="fc-progress">
+          <div class="prog-row">
+            <span class="prog-label">Progression heures</span>
+            <span class="prog-pct">${pct}%</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+        </div>
+        <div class="fc-footer">
+          <div class="fc-next">Suivant : <strong>${escapeHtml(nextLabel)}</strong></div>
+          <button class="btn-continuer">Continuer →</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderLessons(formations) {
+  const list = document.getElementById('lessons-list');
+  const typeIcon = { video: '▶', examen_blanc: '📝', document: '📄' };
+  const typeLabel = { video: '🎥 Vidéo', examen_blanc: '📝 Examen blanc', document: '📄 Document' };
+
+  const formationIds = formations.map(f => f.id);
+  const todo = LECONS.filter(l => formationIds.includes(l.formation_id) && !isLeconDone(l.id)).slice(0, 6);
+
+  if (todo.length === 0) {
+    list.innerHTML = `<div class="empty-state">🎉 Toutes les leçons disponibles sont complétées !</div>`;
+    return;
+  }
+
+  list.innerHTML = todo.map(l => `
+    <div class="lesson-item" onclick="window.location.href='cours.html?formation=${getFormationSlug(l.formation_id)}&lecon=${l.id}'">
+      <div class="lesson-ico ico-${l.type}">${typeIcon[l.type] || '▶'}</div>
+      <div class="lesson-info">
+        <div class="lesson-title">${escapeHtml(l.titre)}</div>
+        <div class="lesson-sub">${typeLabel[l.type] || l.type} · ${l.duree_minutes || '—'} min · ${escapeHtml(l.module_nom || '')}</div>
+      </div>
+      <div class="lesson-status"><span class="status-todo">À faire</span></div>
+    </div>
+  `).join('');
+}
+
+function getFormationSlug(formationId) {
+  const f = FORMATIONS.find(f => f.id === formationId);
+  return f ? f.slug : '';
+}
+
+async function renderLives() {
+  const { data, error } = await _supabase
+    .from('sessions_live')
+    .select('*, formations(titre, slug)')
+    .gte('date_heure', new Date().toISOString())
+    .order('date_heure', { ascending: true })
+    .limit(4);
+
+  const list = document.getElementById('lives-list');
+  if (error || !data || data.length === 0) {
+    list.innerHTML = `<div class="empty-state">Aucun live programmé pour le moment.</div>`;
+    return;
+  }
+
+  const days = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
+
+  list.innerHTML = data.map(s => {
+    const d = new Date(s.date_heure);
+    const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="live-item">
+        <div class="live-day-badge">
+          <div class="hc-val live-day-num">${d.getDate()}</div>
+          <div class="live-day-name">${months[d.getMonth()]}</div>
+        </div>
+        <div class="live-info">
+          <div class="live-title">${escapeHtml(s.titre)}</div>
+          <div class="live-time">${days[d.getDay()]} · ${time} · ${escapeHtml(s.formations?.titre || '')}</div>
+        </div>
+        ${s.lien_visio ? `<a class="btn-join" href="${escapeHtml(s.lien_visio)}" target="_blank">Rejoindre</a>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function goToNextLesson() {
+  const withContent = FORMATIONS.filter(f => LECONS.some(l => l.formation_id === f.id));
+  if (withContent.length === 0) { showToast("Aucune leçon disponible pour l'instant."); return; }
+  for (const f of withContent) {
+    const lecons = LECONS.filter(l => l.formation_id === f.id);
+    const next = lecons.find(l => !isLeconDone(l.id));
+    if (next) {
+      window.location.href = `cours.html?formation=${f.slug}&lecon=${next.id}`;
+      return;
+    }
+  }
+  window.location.href = `cours.html?formation=${withContent[0].slug}`;
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+
+async function logout() {
+  await _supabase.auth.signOut();
+  window.location.href = 'jorel-auth.html';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>
