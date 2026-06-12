@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JOR-EL Formations — Connexion</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const { createClient } = supabase;
+  const _supabase = createClient(
+    'https://uyovoajvjocemowrtyrs.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5b3ZvYWp2am9jZW1vd3J0eXJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExOTQ0NzYsImV4cCI6MjA5Njc3MDQ3Nn0.548_TIMsl7d99sf3evHBTI6xfPqacenJ_SmqCkwh5wk'
+  );
+  const ADMIN_EMAIL = 'zimacom75@gmail.com';
+</script>
 <style>
   :root {
     --bg:       #0b1c0c;
@@ -560,19 +569,24 @@
     btn.classList.add('loading');
     btn.innerHTML = '<span>Connexion…</span>';
 
-    // ══ SUPABASE INTEGRATION POINT ══
-    // const { data, error } = await supabase.auth.signInWithPassword({ email, password: pw });
-    // if (error) { showToast(error.message, true); btn.classList.remove('loading'); return; }
-    // window.location.href = '/dashboard-apprenant.html';
-
-    // DEMO SIMULATION
-    await new Promise(r => setTimeout(r, 1400));
-    showToast('Connexion réussie ! Redirection…');
-    setTimeout(() => {
+    const { data, error } = await _supabase.auth.signInWithPassword({
+      email: email,
+      password: pw
+    });
+    if (error) {
+      showToast('Email ou mot de passe incorrect.', true);
       btn.classList.remove('loading');
       btn.innerHTML = '<span>Se connecter</span><span>→</span>';
-      // window.location.href = 'dashboard-apprenant.html';
-    }, 1800);
+      return;
+    }
+    showToast('Connexion réussie ! Redirection…');
+    setTimeout(() => {
+      if (email === ADMIN_EMAIL) {
+        window.location.href = 'admin.html';
+      } else {
+        window.location.href = 'dashboard-apprenant.html';
+      }
+    }, 1200);
   }
 
   // ── REGISTER ──
@@ -596,16 +610,18 @@
     btn.classList.add('loading');
     btn.innerHTML = '<span>Création du compte…</span>';
 
-    // ══ SUPABASE INTEGRATION POINT ══
-    // const { data, error } = await supabase.auth.signUp({
-    //   email, password: pw,
-    //   options: { data: { prenom, nom } }
-    // });
-    // if (error) { showToast(error.message, true); btn.classList.remove('loading'); return; }
-    // showToast('Compte créé ! Vérifiez votre email.');
-
-    await new Promise(r => setTimeout(r, 1600));
-    showToast('Compte créé avec succès ! Vérifiez votre email. ✉️');
+    const { data, error } = await _supabase.auth.signUp({
+      email: email,
+      password: pw,
+      options: { data: { prenom: prenom, nom: nom } }
+    });
+    if (error) {
+      showToast(error.message, true);
+      btn.classList.remove('loading');
+      btn.innerHTML = '<span>Créer mon compte</span><span>→</span>';
+      return;
+    }
+    showToast('Compte créé ! Vérifiez votre email. ✉️');
     setTimeout(() => {
       btn.classList.remove('loading');
       btn.innerHTML = '<span>Créer mon compte</span><span>→</span>';
